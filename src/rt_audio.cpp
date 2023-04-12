@@ -188,35 +188,56 @@ RtAudioWrap::~RtAudioWrap() { _rtAudio->closeStream(); }
 
 Napi::Value RtAudioWrap::getDevices(const Napi::CallbackInfo& info)
 {
-    std::vector<RtAudio::DeviceInfo> devices;
-
-    const std::vector<unsigned int> deviceIds = _rtAudio->getDeviceIds();
-    for (const auto& deviceId : deviceIds)
+	try
     {
-        devices.push_back(_rtAudio->getDeviceInfo(deviceId));
+		std::vector<RtAudio::DeviceInfo> devices;
+
+		const std::vector<unsigned int> deviceIds = _rtAudio->getDeviceIds();
+		for (const auto& deviceId : deviceIds)
+		{
+			devices.push_back(_rtAudio->getDeviceInfo(deviceId));
+		}
+
+		// Allocate the devices array
+		Napi::Array devicesArray = Napi::Array::New(info.Env(), devices.size());
+
+		// Convert the devices to objects
+		for (unsigned int i = 0; i < devices.size(); i++)
+		{
+			devicesArray[i] = RtAudioConverter::ConvertDeviceInfo(info.Env(), devices[i]);
+		}
+
+		return devicesArray;
     }
-
-    // Allocate the devices array
-    Napi::Array devicesArray = Napi::Array::New(info.Env(), devices.size());
-
-    // Convert the devices to objects
-    for (unsigned int i = 0; i < devices.size(); i++)
+    catch (std::exception& ex)
     {
-        devicesArray[i] = RtAudioConverter::ConvertDeviceInfo(info.Env(), devices[i]);
+        throw Napi::Error::New(info.Env(), ex.what());
     }
-
-    return devicesArray;
 }
 
 Napi::Value RtAudioWrap::getDefaultInputDevice(const Napi::CallbackInfo& info)
 {
-    return Napi::Number::New(info.Env(), _rtAudio->getDefaultInputDevice());
+	try
+    {
+		return Napi::Number::New(info.Env(), _rtAudio->getDefaultInputDevice());
+    }
+    catch (std::exception& ex)
+    {
+        throw Napi::Error::New(info.Env(), ex.what());
+    }
 }
 
 Napi::Value RtAudioWrap::getDefaultOutputDevice(
     const Napi::CallbackInfo& info)
 {
-    return Napi::Number::New(info.Env(), _rtAudio->getDefaultOutputDevice());
+	try
+    {
+		return Napi::Number::New(info.Env(), _rtAudio->getDefaultOutputDevice());
+    }
+    catch (std::exception& ex)
+    {
+        throw Napi::Error::New(info.Env(), ex.what());
+    }
 }
 
 Napi::Value RtAudioWrap::openStream(const Napi::CallbackInfo& info)
